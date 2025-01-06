@@ -1,8 +1,6 @@
 // server.js
 import express from 'express';
-import fs from 'fs';
 import path from 'path';
-import csv from 'csv-parser';
 import getBillText from './apis/legiscan.js';
 import getBillSummary from './apis/openai.js'
 import mysql from 'mysql2';
@@ -21,10 +19,6 @@ app.use(cors())
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-// });
-
 // MySQL database connection configuration
 const db = mysql.createConnection({
     host: 'localhost', // Change this to your MySQL host
@@ -42,7 +36,7 @@ db.connect((err) => {
     console.log('Connected to MySQL database');
 });
 
-// Define the route to get existing bill summaries from the database
+// Get existing bill summaries from the database
 app.post('/get-existing-summaries', async (req, res) => {
     try {
         const { billId } = req.body;
@@ -71,29 +65,28 @@ app.post('/summarize-bill', async (req, res) => {
     try {
         const { billId } = req.body;
 
-        if (!billId) {
-            // not sure how this would occur but might as well make sure
-            return res.status(400).send(JSON.stringify('Missing bill or doc ID'));
-        }
-
+        console.log("Getting bill text...")
+        const start = Date.now();
         const billText = await getBillText(billId);
+        console.log("Got bill text in ", Date.now() - start, " milliseconds")
+        console.log("Summarizing bill text...");
         const summary = await getBillSummary(billText);
-        
-        // Send the response to the client
+        console.log("Got bill summary in ", Date.now() - start, " milliseconds")
+
         res.status(200).send(summary.content);
 
-        // Now handle database operation (do not affect response)
+        console.log("Converting to base64 and saving to db...")
         const tob64 = btoa(summary.content);
+
         db.query(
             `INSERT INTO ls_summaries (bill_id, summary) VALUES (?, ?)`,
             [billId, tob64],
             (err, results) => {
                 if (err) {
-                    console.error(err);
-                    return; // Handle error appropriately (log it or return a response if necessary)
+                    console.error("Error adding summary to database: ", err);
+                    return;
                 }
-                // Optionally, you can log the result of the insert query if needed
-                console.log('Summary inserted into database successfully');
+                console.log('Summary inserted into database successfully. Finished in ', Date.now() - start, ' milliseconds');
             }
         );
 
@@ -105,21 +98,29 @@ app.post('/summarize-bill', async (req, res) => {
 
 
 //Summarize text needs work next
-// also "not like" condition not working here. will SR types be skipped and not count towards limit?
 app.post('/get-bill-data', async (req, res) => {
     try {
-        const { recordStart, billsPerPage } = req.body;
+        const { recordStart, billsPerPage, sortMode } = req.body;
+        
+        const baseQuery = 'SELECT * FROM ls_bill WHERE bill_number NOT LIKE "SR%"';
+        const conditions = {
+            'recent': '',
+            'passed': ' AND status_id = 4',
+            'vetoed': ' AND status_id = 5'
+        };
+    
+        // If the sortMode exists in the conditions, append it to the base query
+        const condition = conditions[sortMode] || ''; // Default to 'recent'
+        
+        // Build the final query
+        const query = `${baseQuery}${condition} ORDER BY status_date DESC LIMIT ? OFFSET ?;`;
 
-        const query = "SELECT * FROM ls_bill WHERE bill_number NOT LIKE 'SR' LIMIT ? OFFSET ?;"
-
-        // Pass both parameters in a single array
         db.query(query, [billsPerPage, recordStart], (err, results) => {
             if (err) {
                 console.error('Error executing query:', err);
                 return res.status(500).send('Error retrieving bill data');
             }
 
-            // Return the data in the response
             return res.status(200).json(results);
         });
 
