@@ -18,7 +18,7 @@ async function getBillSummary(billText) {
             Use simpler, more easily understood language when possible. Your users are people who wish to be informed of
             bills being introduced to congress but do not have time to read the lengthy, complicated bills.  
             Remain bipartisan. You may offer some theories as to why this bill was introduced using any real-world context you are aware of,
-            but be aware this bill may have been introduced up to 2 years ago. Please clearly state any points regarding issues this bill may be attempting to address, as 
+            but be aware this bill may have been introduced up to 2 years ago. Please clearly state any issues this bill may be attempting to address, as 
             well as any potential concerns with the bill.
           `
         }
@@ -26,7 +26,7 @@ async function getBillSummary(billText) {
     },
       { "role": "user", 
         "content": `Please provide a summary/outline of this US congress bill. 
-        Use a bullet point structure, and make sure to include the names of any important
+        Use markdown formatting, and make sure to include the names of any important
         people or organizations mentioned within. If provided in the text, please denote the party and state affiliations 
         of the key individuals by appending the information (for example, (D-TX) for Texas Democrat or (R-NY) for New York Republican) 
         to their names. Use full names rather than "Mr. LastName". Do not output a preamble, such as "sure, here is the summary". 

@@ -1,11 +1,12 @@
 // server.js
 import express from 'express';
 import path from 'path';
-import getBillText from './apis/legiscan.js';
+import legiscan from './apis/legiscan.js';  // Import the default export as an object
 import getBillSummary from './apis/openai.js'
 import mysql from 'mysql2';
 import cors from 'cors'
 import { fileURLToPath } from 'url';
+const { getBillText, searchForBills } = legiscan;
 
 // Initialize the Express application
 const app = express();
@@ -49,7 +50,7 @@ app.post('/get-existing-summaries', async (req, res) => {
                 return res.status(500).json({ message: 'Error fetching data from the database' });
             }
             if (results.length > 0) {
-                return res.status(200).json({ summary: atob(results[0].summary) });
+                return res.status(200).json({ summary: results[0].summary });
             } else {
                 return res.status(200).json({ message: 'Bill summary not found' });
             }
@@ -68,6 +69,10 @@ app.post('/summarize-bill', async (req, res) => {
         console.log("Getting bill text...")
         const start = Date.now();
         const billText = await getBillText(billId);
+        if (!billText) {
+            console.log("Bill text not found, returning early...");
+            return res.status(404).send('Bill text not available at this time');
+        }
         console.log("Got bill text in ", Date.now() - start, " milliseconds")
         console.log("Summarizing bill text...");
         const summary = await getBillSummary(billText);
@@ -75,8 +80,8 @@ app.post('/summarize-bill', async (req, res) => {
 
         res.status(200).send(summary.content);
 
-        console.log("Converting to base64 and saving to db...")
-        const tob64 = btoa(summary.content);
+        console.log("Saving summary to db...")
+        const tob64 = summary.content;
 
         db.query(
             `INSERT INTO ls_summaries (bill_id, summary) VALUES (?, ?)`,
@@ -129,6 +134,24 @@ app.post('/get-bill-data', async (req, res) => {
         return res.status(500).send('Error retrieving bill data');
     }
 });
+
+app.post('/search-for-bills', async (req, res) => {
+    try {
+        const { queryText } = req.body;
+
+        const response = await searchForBills(queryText);
+
+        if(response){
+            return res.status(200).json(response)
+        } else {
+            return res.status(404).text()
+        }
+    } catch (err) {
+        console.error('Error processing request: ', err);
+        return res.status(500).json({ message: 'Error processing request' });
+    }
+});
+
 
 
 

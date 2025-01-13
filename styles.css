@@ -159,14 +159,22 @@ button {
   background-color: #8A47A3;
 }
 
+.error-btn {
+  background-color: crimson;
+}
+#search-button {
+  background-color: transparent;
+}
 
+#searching-button {
+  cursor: wait;
+  background-color: blue;
+}
 
-.loading {
-  text-align: center;
-  font-size: 16px;
-  color: #666;
-  display: none;
-  margin-top: 20px;
+#search-icon {
+  fill: black;
+  width: 25px;
+  height: 25px;
 }
 
 .summary-item {

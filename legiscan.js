@@ -5,21 +5,31 @@ dotenv.config();
 
 const legiscan_key = process.env.LEGI_API_KEY;
 
+
+const searchForBills = async (text) => {
+  const queryText = encodeURIComponent(text)
+  const url = `https://api.legiscan.com/?key=${encodeURIComponent(legiscan_key)}&op=getSearch&state=US&query=${queryText}`;
+  console.log("searching for bills including text: ", queryText)
+  try {
+    const response = await axios.get(url)
+    console.log(response.data)
+    return response.data
+  } catch (error){
+    console.log(error)
+  }
+}
+
 async function getBillData(docId) {
   if (!docId) {
     throw new Error('Invalid document ID provided');
   }
-
-  const keyEncoded = encodeURIComponent(legiscan_key);
-  const opEncoded = encodeURIComponent('getBillText');
   const idEncoded = encodeURIComponent(docId);
-  const url = `https://api.legiscan.com/?key=${keyEncoded}&op=${opEncoded}&id=${idEncoded}`;
+  const url = `https://api.legiscan.com/?key=${encodeURIComponent(legiscan_key)}&op=getBillText&id=${idEncoded}`;
   console.log('Fetching Bill Data from:', url);
 
   try {
     const response = await axios.get(url);
-    const billData = response.data;
-    return billData;
+    return response.data
   } catch (error) {
     console.error('Error fetching bill data:', error);
     throw new Error(`Error fetching bill data: ${error.message}`);
@@ -37,11 +47,7 @@ function parsePdf(b64) {
         pdfData.Pages.forEach(page => {
           page.Texts.forEach(textItem => {
             const decodedText = decodeURIComponent(textItem.R[0].T);
-
-            // Remove invalid characters (non-printable or non-ASCII characters)
-            // to fix DOMException: InvalidCharacterError
-            const sanitizedText = decodedText.replace(/[^\x20-\x7E]/g, '');
-            extractedText += sanitizedText + ' ';
+            extractedText += decodedText + ' ';
           });
           extractedText += '\n\n';
         });
@@ -95,7 +101,7 @@ const getBillText = async (billId) => {
 
     let billText;
     try {
-      console.log("Converting pdf to base64...")
+      console.log("Parsing pdf...")
       billText = await parsePdf(billData.text.doc);
     } catch (parseError) {
       console.error('Document parsing error details:', parseError);
@@ -107,7 +113,7 @@ const getBillText = async (billId) => {
     }
 
     // Summarize
-    console.log('Returning original text...');
+    console.log('Parsed pdf, now returning original bill text...');
     return billText;
 
   } catch (error) {
@@ -116,4 +122,4 @@ const getBillText = async (billId) => {
   }
 };
 
-export default getBillText;
+export default {getBillText, searchForBills};

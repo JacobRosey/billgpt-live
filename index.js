@@ -4,20 +4,24 @@ const billsPerPage = 30;
 const billListElement = document.getElementById('billList');
 
 var sortMode = 'recent';
+var activeMode = 'sort';
 
 var cachedBills = {}
 
 function sortBills(mode){
-  if(mode == sortMode) return; //Clicked the already active button
-  const btn = document.getElementById(sortMode);
-  btn.classList.remove('sort-btn-active')
-  const newBtn = document.getElementById(mode);
-  newBtn.classList.add('sort-btn-active');
+
+  if(mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
+  const button = document.getElementById(sortMode);
+  button.classList.remove('sort-btn-active')
+  const newButton = document.getElementById(mode);
+  newButton.classList.add('sort-btn-active');
   sortMode = mode;
-  const list = document.querySelector('.bill-list');
-  list.innerHTML = '';
+  billListElement.innerHTML = '';
   fetchBills(0);
 }
+
+// Check if bill has already been summarized (should know if summary exists when receiving from backend)
+// and if so change button to 'view summary' and render it
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
 // and if so change button to 'view summary' and render it
@@ -26,7 +30,7 @@ async function fetchBills(page) {
   // Check if we already have the data cached for the current sort mode
   if (cachedBills[sortMode] && cachedBills[sortMode].length > page * billsPerPage) {
     console.log("Rendering cached bills in sort mode: ", sortMode)
-    return renderCachedBills(page);
+    return renderCachedBills();
   }
 
   console.log("fetching new bills in sort mode: ", sortMode);
@@ -87,8 +91,7 @@ async function fetchBills(page) {
       billItem.appendChild(billContent);
       billItem.appendChild(summaryItem);
 
-      // Ensure the parent element exists
-      document.querySelector('.bill-list').appendChild(billItem);
+      billListElement.appendChild(billItem);
     }
     cachedBills[sortMode] = cachedBills[sortMode].concat(bills);
   } catch (error) {
@@ -96,8 +99,9 @@ async function fetchBills(page) {
   }
 }
 
-function renderCachedBills(){
-  for (const bill of cachedBills[sortMode]) { 
+function renderCachedBills(arg){
+  activeMode = arg ? 'search' : 'sort'
+  for (const bill of cachedBills[arg ? arg : sortMode]) { 
     let id = bill.bill_id;
 
     const billItem = document.createElement('div');
@@ -130,13 +134,59 @@ function renderCachedBills(){
     billItem.appendChild(billContent);
     billItem.appendChild(summaryItem);
 
-    // Ensure the parent element exists
-    document.querySelector('.bill-list').appendChild(billItem);
+    billListElement.appendChild(billItem);
+  }
+}
+
+async function searchBills(){
+  const query = document.getElementById('search').value;
+  const button = document.getElementById('search-button');
+  button.classList.add('searching-button');
+  button.disabled = true;
+  try {
+    const response = await fetch('http://localhost:3000/search-for-bills', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ queryText: query }),
+    });
+
+    if (!response.ok) {
+      console.error(response);
+    }
+
+    const data = await response.json();
+    const searchMode = query.trim(); 
+
+    if(!cachedBills[searchMode]){
+      cachedBills[searchMode] = []
+      const billsArr = Object.values(data.searchresult)
+      for(let i=0; i<billsArr.length - 1; i++){
+       const bill = {bill_id: billsArr[i].bill_id, title: billsArr[i].title, summary: await isSummarized(billsArr[i].bill_id)}
+       cachedBills[searchMode].push(bill)
+      }
+    }
+  
+    billListElement.innerHTML = ''
+    renderCachedBills(searchMode);
+    if(billListElement.innerHTML == ''){
+      billListElement.innerHTML = 
+      `
+      <br><br><br>
+      <h2>Sorry, we could not find any bills related to your search term!</h2>
+      `
+    }
+    activeMode = 'search';
+    button.disabled = false;
+  } catch (err) {
+    console.error(err);
   }
 }
 
 // Lazy load more bills when scrolling
 billListElement.addEventListener('scroll', () => {
+  if(activeMode == 'search')return;
   if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight) {
     // Fetch more bills if scrolled to the bottom
     page += 1;
@@ -175,19 +225,9 @@ async function summarizeBillText(billId) {
       body: JSON.stringify({ billId })
     });
 
-    if(response == false){
-      alert("Sorry, no pdf was found for this bill")
-      // const bill = getElementById(billId)
-      // const btn = bill.querySelector('btn');
-      // btn.innerHTML = "No summary available!"
-      return;
-    }
-
     if (!response.ok) {
-      const errorText = await response.text();
-        console.error('Failed to summarize bill. Response:', errorText);
-        throw new Error(`Failed to summarize bill: ${errorText}`);
-    }
+      return "\n\n\n**Sorry, no text is currently available for this bill. Please try again later! **\n\n\n\n"
+    }    
 
     const textResponse = await response.text();
     try {
@@ -230,25 +270,24 @@ function hideSummary(id) {
   // Add the event listener for showing the summary again
   button.onclick = () => renderSummary(id, summaryItem.innerHTML);
 
-  if (summaryItem) {
-    summaryItem.classList.remove('show');
-  }
+  summaryItem.classList.remove('show');
 }
 
 function renderSummary(id, content) {
+  console.log("summary content: ", content)
   const bill = document.getElementById(id);
   const summaryItem = bill.querySelector('.summary-item');
   const button = bill.querySelector('button');
-  const billList = document.querySelector('.bill-list'); // The scrollable container
-
+ 
   // Overwrite previous click listener
   button.onclick = () => hideSummary(id);
 
-  button.innerHTML = 'Hide Summary';
   button.classList.remove('summarized-btn')
   button.classList.remove('summarizing-btn')
-  button.classList.add('rendered-summary-btn');
 
+  button.innerHTML = 'Hide Summary';
+  button.classList.add('rendered-summary-btn');
+  
    // Scroll the .bill-list container to bring the summary into view
    const billPosition = bill.offsetTop; 
  
@@ -275,5 +314,5 @@ function convertMarkdownToHtml(text) {
   }).join('<br>');
 }
 
-// Fetch bills on page load
+// Fetch bills on initial page load
 fetchBills(page);
