@@ -3,23 +3,33 @@ import PDFParser from 'pdf2json';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const legi_key = process.env.LEGI_API_KEY;
+const legiscan_key = process.env.LEGI_API_KEY;
+
+
+const searchForBills = async (text) => {
+  const queryText = encodeURIComponent(text)
+  const url = `https://api.legiscan.com/?key=${encodeURIComponent(legiscan_key)}&op=getSearch&state=US&query=${queryText}`;
+  console.log("searching for bills including text: ", queryText)
+  try {
+    const response = await axios.get(url)
+    console.log(response.data)
+    return response.data
+  } catch (error){
+    console.log(error)
+  }
+}
 
 async function getBillData(docId) {
   if (!docId) {
     throw new Error('Invalid document ID provided');
   }
-
-  const keyEncoded = encodeURIComponent(legi_key);
-  const opEncoded = encodeURIComponent('getBillText');
   const idEncoded = encodeURIComponent(docId);
-  const url = `https://api.legiscan.com/?key=${keyEncoded}&op=${opEncoded}&id=${idEncoded}`;
+  const url = `https://api.legiscan.com/?key=${encodeURIComponent(legiscan_key)}&op=getBillText&id=${idEncoded}`;
   console.log('Fetching Bill Data from:', url);
 
   try {
     const response = await axios.get(url);
-    const billData = response.data;
-    return billData;
+    return response.data
   } catch (error) {
     console.error('Error fetching bill data:', error);
     throw new Error(`Error fetching bill data: ${error.message}`);
@@ -33,6 +43,7 @@ function parsePdf(b64) {
     pdfParser.on("pdfParser_dataReady", function (pdfData) {
       try {
         let extractedText = '';
+
         pdfData.Pages.forEach(page => {
           page.Texts.forEach(textItem => {
             const decodedText = decodeURIComponent(textItem.R[0].T);
@@ -40,6 +51,7 @@ function parsePdf(b64) {
           });
           extractedText += '\n\n';
         });
+
         resolve(extractedText.trim());
       } catch (err) {
         reject(new Error(`Error processing PDF data: ${err.message}`));
@@ -63,7 +75,7 @@ const getBillText = async (billId) => {
   if (!billId) {
     throw new Error('Invalid bill ID provided');
   }
-  const keyEncoded = encodeURIComponent(legi_key);
+  const keyEncoded = encodeURIComponent(legiscan_key);
   const opEncoded = encodeURIComponent('getBill');
   const idEncoded = encodeURIComponent(billId);
 
@@ -76,8 +88,9 @@ const getBillText = async (billId) => {
     const response = await axios.get(url);
     const parsedData = response.data;
 
-    if (!parsedData?.bill?.texts?.[0]?.doc_id) {
-      throw new Error('Document ID not found in response');
+    if (!parsedData.bill?.texts?.[0]?.doc_id) {
+      console.log("No doc id!")
+      return false
     }
 
     const docId = parsedData.bill.texts[0].doc_id;
@@ -88,7 +101,7 @@ const getBillText = async (billId) => {
 
     let billText;
     try {
-      console.log("Converting pdf to base64...")
+      console.log("Parsing pdf...")
       billText = await parsePdf(billData.text.doc);
     } catch (parseError) {
       console.error('Document parsing error details:', parseError);
@@ -100,13 +113,13 @@ const getBillText = async (billId) => {
     }
 
     // Summarize
-    console.log('Attempting to summarize parsed text...');
+    console.log('Parsed pdf, now returning original bill text...');
     return billText;
 
   } catch (error) {
     console.error('Full error details:', error);
-    throw new Error(`Failed to summarize bill: ${error.message}`);
+    throw new Error(`Failed to get bill text: ${error.message}`);
   }
 };
 
-export default getBillText;
+export default {getBillText, searchForBills};
