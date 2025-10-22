@@ -1,4 +1,3 @@
-// server.js
 import express from 'express';
 import path from 'path';
 import legiscan from './apis/legiscan.js';  
@@ -12,7 +11,7 @@ const { getBillText, searchForBills } = legiscan;
 const app = express();
 const port = 3000;
 
-// Middleware
+
 app.use(express.json());
 app.use(cors())
 
@@ -20,10 +19,11 @@ app.use(cors())
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 const db = mysql.createConnection({
     host: 'localhost', 
     user: 'root', 
-    password: 'root', 
+    password: 'password', 
     database: 'legiscan_api', 
 });
 
