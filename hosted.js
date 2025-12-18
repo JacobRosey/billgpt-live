@@ -1,14 +1,14 @@
 // server.js
 import express from 'express';
 import path from 'path';
-import legiscan from './apis/legiscan.js';  // Import the default export as an object
+import legiscan from './apis/legiscan.js';  
 import getBillSummary from './apis/openai.js'
 import mysql from 'mysql2';
 import cors from 'cors'
 import { fileURLToPath } from 'url';
 const { getBillText, searchForBills } = legiscan;
 
-// Initialize the Express application
+
 const app = express();
 const port = 3000;
 
@@ -20,15 +20,13 @@ app.use(cors())
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MySQL database connection configuration
 const db = mysql.createConnection({
-    host: 'localhost', // Change this to your MySQL host
-    user: 'root', // Change this to your MySQL username
-    password: 'password', // Change this to your MySQL password
-    database: 'legiscan_api', // Change this to your database name
+    host: 'localhost', 
+    user: 'root', 
+    password: 'root', 
+    database: 'legiscan_api', 
 });
 
-// Connect to the MySQL database
 db.connect((err) => {
     if (err) {
         console.error('Error connecting to the database: ', err);
