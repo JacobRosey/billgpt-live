@@ -37,7 +37,7 @@ async function fetchBills(page) {
 
   try {
     const recordStart = page * billsPerPage;
-    const response = await fetch('http://localhost:3000/get-bill-data', {
+    const response = await fetch('http://billgpt.onrender.com/get-bill-data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ async function searchBills(){
   button.classList.add('searching-button');
   button.disabled = true;
   try {
-    const response = await fetch('http://localhost:3000/search-for-bills', {
+    const response = await fetch('http://billgpt.onrender.com/search-for-bills', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ billListElement.addEventListener('scroll', () => {
 
 async function isSummarized(billId){
   try {
-    const response = await fetch('http://localhost:3000/get-existing-summaries', {
+    const response = await fetch('http://billgpt.onrender.com/get-existing-summaries', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ async function isSummarized(billId){
 
 async function summarizeBillText(billId) {
   try {
-    const response = await fetch('http://localhost:3000/summarize-bill', {
+    const response = await fetch('http://billgpt.onrender.com/summarize-bill', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
