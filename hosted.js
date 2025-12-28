@@ -2,12 +2,12 @@ import express from 'express';
 import path from 'path';
 import legiscan from './apis/legiscan.js';  
 import getBillSummary from './apis/openai.js'
-import mysql from 'mysql2';
+import pg from 'pg'
 import cors from 'cors'
 import { fileURLToPath } from 'url';
+
+const { Pool } = pg
 const { getBillText, searchForBills } = legiscan;
-
-
 const app = express();
 const port = 3000;
 
@@ -20,20 +20,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const db = mysql.createConnection({
-    host: 'localhost', 
-    user: 'root', 
-    password: 'password', 
-    database: 'legiscan_api', 
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database: ', err);
-        return;
+const db = new SecurityPolicyViolationEvent({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
     }
-    console.log('Connected to MySQL database');
-});
+})
+
+db.query('SELECT NOW()', (err, res) => {
+    if(err){
+        console.err('Error connecting to database: ', err)
+    } else {
+        console.log('Connected to PostgreSQL database')
+    }
+})
 
 // Get existing bill summaries from the database
 app.post('/get-existing-summaries', async (req, res) => {
@@ -41,7 +41,7 @@ app.post('/get-existing-summaries', async (req, res) => {
         const { billId } = req.body;
 
         // Query the database to find the summary for the given billId
-        const query = 'SELECT summary FROM ls_summaries WHERE bill_id = ?';
+        const query = 'SELECT summary FROM ls_summaries WHERE bill_id = $1';
         db.query(query, [billId], (err, results) => {
             if (err) {
                 console.error('Database query error: ', err);
@@ -82,7 +82,7 @@ app.post('/summarize-bill', async (req, res) => {
         const tob64 = summary.content;
 
         db.query(
-            `INSERT INTO ls_summaries (bill_id, summary) VALUES (?, ?)`,
+            `INSERT INTO ls_summaries (bill_id, summary) VALUES ($1, $2)`,
             [billId, tob64],
             (err, results) => {
                 if (err) {
@@ -116,7 +116,7 @@ app.post('/get-bill-data', async (req, res) => {
         const condition = conditions[sortMode] || ''; // Default to 'recent'
         
         // Build the final query
-        const query = `${baseQuery}${condition} ORDER BY status_date DESC LIMIT ? OFFSET ?;`;
+        const query = `${baseQuery}${condition} ORDER BY status_date DESC LIMIT $1 OFFSET $2;`;
 
         db.query(query, [billsPerPage, recordStart], (err, results) => {
             if (err) {

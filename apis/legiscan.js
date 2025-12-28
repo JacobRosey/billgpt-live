@@ -84,7 +84,7 @@ const getBillText = async (billId) => {
   console.log('Fetching Bill text from:', url);
 
   try {
-    // Fetch docId using axios
+    // Fetch docId 
     const response = await axios.get(url);
     const parsedData = response.data;
 
