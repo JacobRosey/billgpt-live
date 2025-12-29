@@ -124,7 +124,7 @@ app.post('/get-bill-data', async (req, res) => {
                 return res.status(500).send('Error retrieving bill data');
             }
 
-            return res.status(200).json(results);
+            return res.status(200).json(results.rows);
         });
 
     } catch (error) {
@@ -149,9 +149,6 @@ app.post('/search-for-bills', async (req, res) => {
         return res.status(500).json({ message: 'Error processing request' });
     }
 });
-
-
-
 
 // Start the server
 app.listen(port, () => {
