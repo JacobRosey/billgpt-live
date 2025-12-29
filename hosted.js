@@ -40,15 +40,15 @@ app.post('/get-existing-summaries', async (req, res) => {
     try {
         const { billId } = req.body;
 
-        // Query the database to find the summary for the given billId
         const query = 'SELECT summary FROM ls_summaries WHERE bill_id = $1';
         db.query(query, [billId], (err, results) => {
             if (err) {
                 console.error('Database query error: ', err);
                 return res.status(500).json({ message: 'Error fetching data from the database' });
             }
-            if (results.length > 0) {
-                return res.status(200).json({ summary: results[0].summary });
+
+            if (results.rows.length > 0) {
+                return res.status(200).json({ summary: results.rows[0].summary });
             } else {
                 return res.status(200).json({ message: 'Bill summary not found' });
             }
@@ -58,6 +58,7 @@ app.post('/get-existing-summaries', async (req, res) => {
         return res.status(500).json({ message: 'Error processing request' });
     }
 });
+
 
 // Handle requests for bill summaries
 app.post('/summarize-bill', async (req, res) => {
