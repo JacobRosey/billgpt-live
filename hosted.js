@@ -105,7 +105,7 @@ app.post('/get-bill-data', async (req, res) => {
     try {
         const { recordStart, billsPerPage, sortMode } = req.body;
         
-        const baseQuery = 'SELECT * FROM ls_bill WHERE bill_number NOT LIKE "SR%"';
+        const baseQuery = "SELECT * FROM ls_bill WHERE bill_number NOT LIKE 'SR%'";
         const conditions = {
             'recent': '',
             'passed': ' AND status_id = 4',
