@@ -9,7 +9,7 @@ var activeMode = 'sort';
 
 var cachedBills = {}
 
-window.sortBills = function(mode){
+function sortBills(mode){
 
   if(mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
   const button = document.getElementById(sortMode);
@@ -139,7 +139,7 @@ function renderCachedBills(arg){
   }
 }
 
-window.searchBills = async function(){
+async function searchBills(){
   const query = document.getElementById('search').value;
   const button = document.getElementById('search-button');
   button.classList.add('searching-button');
