@@ -11,21 +11,21 @@ body {
 
 .title-text {
   text-align: center;
+  margin: 5px;
 }
 
 .title-text body{
   padding: 5px;
 }
 
+.title-text h2 {
+  text-align: center;
+  margin: 15px;
+}
 
 .container {
   max-width: 1000px;
   margin: 0 auto;
-}
-
-h2 {
-  text-align: center;
-  margin: 15px;
 }
 
 .bill-list {
