@@ -9,6 +9,20 @@ var activeMode = 'sort';
 
 var cachedBills = {}
 
+document.getElementById('recent').addEventListener('click', function() {
+  sortBills('recent');
+});
+
+document.getElementById('passed').addEventListener('click', function() {
+  sortBills('passed');
+});
+
+document.getElementById('vetoed').addEventListener('click', function() {
+  sortBills('vetoed');
+});
+
+document.getElementById('search-button').addEventListener('click', searchBills);
+
 function sortBills(mode){
 
   if(mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
