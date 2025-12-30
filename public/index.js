@@ -1,3 +1,5 @@
+import { marked } from "marked"
+
 // State management for dummies
 let page = 0;
 const billsPerPage = 30;
@@ -299,20 +301,20 @@ function renderSummary(id, content) {
 
   if (bill) {
     summaryItem.classList.add('show');
-    summaryItem.innerHTML = convertMarkdownToHtml(content);
+    summaryItem.innerHTML = marked.parse(content);
   }
 
   button.disabled = false;
 }
 
-function convertMarkdownToHtml(text) {
-  return text.split('\n').map(line => {
-    // Convert "**Text**" to "<strong>Text</strong>"
-    line = line.replace(/^### (.*)/, '<h3>$1</h3>');
-    line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    return line
-  }).join('<br>');
-}
+// function convertMarkdownToHtml(text) {
+//   return text.split('\n').map(line => {
+//     // Convert "**Text**" to "<strong>Text</strong>"
+//     line = line.replace(/^### (.*)/, '<h3>$1</h3>');
+//     line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+//     return line
+//   }).join('<br>');
+// }
 
 // Fetch bills on initial page load
 fetchBills(page);
