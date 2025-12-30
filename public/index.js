@@ -1,4 +1,4 @@
-import { marked } from "marked"
+const marked = require('marked');
 
 // State management for dummies
 let page = 0;
