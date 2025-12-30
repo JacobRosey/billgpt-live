@@ -1,6 +1,5 @@
-const marked = require('marked');
+import { marked } from 'marked';
 
-// State management for dummies
 let page = 0;
 const billsPerPage = 30;
 const billListElement = document.getElementById('billList');
