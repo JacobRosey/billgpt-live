@@ -11,11 +11,16 @@ body {
 
 .title-text {
   text-align: center;
-  margin: 5px;
 }
 
 .title-text body{
   padding: 5px;
+}
+
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .title-text h2 {
@@ -23,13 +28,8 @@ body {
   margin: 15px;
 }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
 .bill-list {
-  height: 500px;
+  height: 600px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;
