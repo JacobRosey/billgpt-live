@@ -13,7 +13,7 @@ const searchForBills = async (text) => {
   try {
     const response = await axios.get(url)
     console.log(response.data)
-    return response.json()
+    return response.data
   } catch (error){
     console.log(error)
   }
