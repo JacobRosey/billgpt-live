@@ -158,6 +158,7 @@ async function searchBills(){
   const button = document.getElementById('search-button');
   button.classList.add('searching-button');
   button.disabled = true;
+  
   try {
     const response = await fetch('https://billgpt.onrender.com/search-for-bills', {
       method: 'POST',
@@ -168,8 +169,18 @@ async function searchBills(){
     });
 
     if (!response.ok) {
-      console.error(response);
+      console.error("Error: Failed to fetch bills", response.status, response.statusText);
+      button.disabled = false;
+      return;
     }
+
+    const responseText = await response.text();
+    if (!responseText) {
+      console.error("Error: Response body is empty");
+      button.disabled = false; 
+      return;
+    } else console.log(responseText)
+    
 
     const data = await response.json();
     const searchMode = query.trim(); 
