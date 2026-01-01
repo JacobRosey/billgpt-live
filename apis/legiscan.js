@@ -12,11 +12,11 @@ const searchForBills = async (text) => {
   console.log("searching for bills including text: ", queryText)
   try {
     const response = await axios.get(url)
+    console.log("afjdkl;afjioqeapnjfokipdasnfponapoweifnjkoapdsnjfkpanefkojapsnfkojpanefmoasenjfo")
     console.log(response.data)
     return response.data
   } catch (error){
-    console.log(error)
-    return { status: 'ERROR', message: 'LegiScan search failed' }
+    throw new Error(`Error fetching bill data: ${error.message}`);
   }
 }
 
@@ -26,13 +26,11 @@ async function getBillData(docId) {
   }
   const idEncoded = encodeURIComponent(docId);
   const url = `https://api.legiscan.com/?key=${encodeURIComponent(legiscan_key)}&op=getBillText&id=${idEncoded}`;
-  console.log('Fetching Bill Data from:', url);
 
   try {
     const response = await axios.get(url);
     return response.data
   } catch (error) {
-    console.error('Error fetching bill data:', error);
     throw new Error(`Error fetching bill data: ${error.message}`);
   }
 }
