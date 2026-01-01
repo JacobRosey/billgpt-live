@@ -167,20 +167,21 @@ async function searchBills(){
       },
       body: JSON.stringify({ queryText: query }),
     });
-
+    
     if (!response.ok) {
       console.error("Error: Failed to fetch bills", response.status, response.statusText);
       button.disabled = false;
       return;
     }
 
-    const responseText = await response.data;
+    const responseText = await response.json();
     if (!responseText) {
       console.error("Error: Response body is empty");
       button.disabled = false; 
       return;
-    } else console.log(responseText)
-    
+    } else {
+      console.log(responseText); 
+    }
 
     const data = await response.json();
     const searchMode = query.trim(); 
