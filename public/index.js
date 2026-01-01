@@ -9,23 +9,23 @@ var activeMode = 'sort';
 
 var cachedBills = {}
 
-document.getElementById('recent').addEventListener('click', function() {
+document.getElementById('recent').addEventListener('click', function () {
   sortBills('recent');
 });
 
-document.getElementById('passed').addEventListener('click', function() {
+document.getElementById('passed').addEventListener('click', function () {
   sortBills('passed');
 });
 
-document.getElementById('vetoed').addEventListener('click', function() {
+document.getElementById('vetoed').addEventListener('click', function () {
   sortBills('vetoed');
 });
 
 document.getElementById('search-button').addEventListener('click', searchBills);
 
-function sortBills(mode){
+function sortBills(mode) {
 
-  if(mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
+  if (mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
   const button = document.getElementById(sortMode);
   button.classList.remove('sort-btn-active')
   const newButton = document.getElementById(mode);
@@ -38,7 +38,7 @@ function sortBills(mode){
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
 // and if so change button to 'view summary' and render it
 async function fetchBills(page) {
-  
+
   // Check if we already have the data cached for the current sort mode
   if (cachedBills[sortMode] && cachedBills[sortMode].length > page * billsPerPage) {
     console.log("Rendering cached bills in sort mode: ", sortMode)
@@ -68,7 +68,7 @@ async function fetchBills(page) {
       cachedBills[sortMode] = []; // Initialize the array for the current sort mode if it doesn't exist
     }
 
-    for (const bill of bills) { 
+    for (const bill of bills) {
       let id = bill.bill_id;
       const summarized = await isSummarized(id);
 
@@ -111,9 +111,9 @@ async function fetchBills(page) {
   }
 }
 
-function renderCachedBills(arg){
+function renderCachedBills(arg) {
   activeMode = arg ? 'search' : 'sort'
-  for (const bill of cachedBills[arg ? arg : sortMode]) { 
+  for (const bill of cachedBills[arg ? arg : sortMode]) {
     let id = bill.bill_id;
 
     const billItem = document.createElement('div');
@@ -150,12 +150,12 @@ function renderCachedBills(arg){
   }
 }
 
-async function searchBills(){
+async function searchBills() {
   const query = document.getElementById('search').value;
   const button = document.getElementById('search-button');
   button.classList.add('searching-button');
   button.disabled = true;
-  
+
   try {
     const response = await fetch('https://billgpt.onrender.com/search-for-bills', {
       method: 'POST',
@@ -174,28 +174,28 @@ async function searchBills(){
     const data = await response.json();
     if (!data) {
       console.error("Error: Response body is empty");
-      button.disabled = false; 
+      button.disabled = false;
       return;
     } else {
-      console.log(data); 
+      console.log(data);
     }
 
-    const searchMode = query.trim(); 
+    const searchMode = query.trim();
 
-    if(!cachedBills[searchMode]){
+    if (!cachedBills[searchMode]) {
       cachedBills[searchMode] = []
       const billsArr = Object.values(data.searchresult)
-      for(let i=0; i < billsArr.length - 1; i++){
-       const bill = {bill_id: billsArr[i].bill_id, title: billsArr[i].title, summary: await isSummarized(billsArr[i].bill_id)}
-       cachedBills[searchMode].push(bill)
+      for (let i = 0; i < billsArr.length; i++) {
+        const bill = { bill_id: billsArr[i].bill_id, title: billsArr[i].title, summary: await isSummarized(billsArr[i].bill_id) }
+        cachedBills[searchMode].push(bill)
       }
     }
-  
+
     billListElement.innerHTML = ''
     renderCachedBills(searchMode);
-    if(billListElement.innerHTML == ''){
-      billListElement.innerHTML = 
-      `
+    if (billListElement.innerHTML == '') {
+      billListElement.innerHTML =
+        `
       <br><br><br>
       <h2>Sorry, we could not find any bills related to your search term!</h2>
       `
@@ -209,7 +209,7 @@ async function searchBills(){
 
 // Lazy load more bills when scrolling
 billListElement.addEventListener('scroll', () => {
-  if(activeMode == 'search')return;
+  if (activeMode == 'search') return;
   if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight) {
     // Fetch more bills if scrolled to the bottom
     page += 1;
@@ -217,7 +217,7 @@ billListElement.addEventListener('scroll', () => {
   }
 });
 
-async function isSummarized(billId){
+async function isSummarized(billId) {
   try {
     const response = await fetch('https://billgpt.onrender.com/get-existing-summaries', {
       method: 'POST',
@@ -231,7 +231,7 @@ async function isSummarized(billId){
       console.error(response);
     }
 
-    const data = await response.json(); 
+    const data = await response.json();
     return data.message ? null : data.summary;
   } catch (err) {
     console.error(err);
@@ -250,19 +250,18 @@ async function summarizeBillText(billId) {
 
     if (!response.ok) {
       return "\n\n\n**Sorry, no text is currently available for this bill. Please try again later! **\n\n\n\n"
-    }    
+    }
 
     const textResponse = await response.text();
     try {
-      if(activeMode == 'search'){
-        const searchMode = document.getElementById('search').innerHTML
-        cachedBills[searchMode].array.forEach(element => {
-          if(element.billId == billId){
-            element.summary = textResponse
-          }
-        });
+      if (activeMode === 'search') {
+        const searchMode = document.getElementById('search').value.trim(); // Adjusted to get the correct search term
+        const bill = cachedBills[searchMode]?.find(b => b.bill_id === billId);
+        if (bill) {
+          bill.summary = textResponse; // Update the summary in the cache
+        }
       }
-      return textResponse; 
+      return textResponse;
     } catch (jsonError) {
       console.error('Error parsing JSON:', jsonError);
       throw jsonError;
@@ -309,7 +308,7 @@ function renderSummary(id, content) {
   const bill = document.getElementById(id);
   const summaryItem = bill.querySelector('.summary-item');
   const button = bill.querySelector('button');
- 
+
   // Overwrite previous click listener
   button.onclick = () => hideSummary(id);
 
@@ -318,15 +317,15 @@ function renderSummary(id, content) {
 
   button.innerHTML = 'Hide Summary';
   button.classList.add('rendered-summary-btn');
-  
-   // Scroll the .bill-list container to bring the summary into view
-   const billPosition = bill.offsetTop; 
- 
-   // Smoothly scroll the container
-   billList.scrollTo({
-     top: billPosition - 90,
-     behavior: 'smooth',
-   });
+
+  // Scroll the .bill-list container to bring the summary into view
+  const billPosition = bill.offsetTop;
+
+  // Smoothly scroll the container
+  billList.scrollTo({
+    top: billPosition - 90,
+    behavior: 'smooth',
+  });
 
   if (bill) {
     summaryItem.classList.add('show');
