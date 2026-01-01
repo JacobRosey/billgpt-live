@@ -185,7 +185,7 @@ async function searchBills() {
     if (!cachedBills[searchMode]) {
       cachedBills[searchMode] = []
       const billsArr = Object.values(data.searchresult)
-      for (let i = 0; i < billsArr.length; i++) {
+      for (let i = 0; i < billsArr.length - 1; i++) {
         const bill = { bill_id: billsArr[i].bill_id, title: billsArr[i].title, summary: await isSummarized(billsArr[i].bill_id) }
         cachedBills[searchMode].push(bill)
       }
