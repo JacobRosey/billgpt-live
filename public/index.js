@@ -37,9 +37,6 @@ function sortBills(mode){
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
 // and if so change button to 'view summary' and render it
-
-// Check if bill has already been summarized (should know if summary exists when receiving from backend)
-// and if so change button to 'view summary' and render it
 async function fetchBills(page) {
   
   // Check if we already have the data cached for the current sort mode
@@ -188,7 +185,7 @@ async function searchBills(){
     if(!cachedBills[searchMode]){
       cachedBills[searchMode] = []
       const billsArr = Object.values(data.searchresult)
-      for(let i=0; i<billsArr.length - 1; i++){
+      for(let i=0; i < billsArr.length - 1; i++){
        const bill = {bill_id: billsArr[i].bill_id, title: billsArr[i].title, summary: await isSummarized(billsArr[i].bill_id)}
        cachedBills[searchMode].push(bill)
       }
@@ -257,6 +254,14 @@ async function summarizeBillText(billId) {
 
     const textResponse = await response.text();
     try {
+      if(activeMode == 'search'){
+        const searchMode = document.getElementById('search').innerHTML
+        cachedBills[searchMode].array.forEach(element => {
+          if(element.billId == billId){
+            element.summary = textResponse
+          }
+        });
+      }
       return textResponse; 
     } catch (jsonError) {
       console.error('Error parsing JSON:', jsonError);
@@ -330,15 +335,6 @@ function renderSummary(id, content) {
 
   button.disabled = false;
 }
-
-// function convertMarkdownToHtml(text) {
-//   return text.split('\n').map(line => {
-//     // Convert "**Text**" to "<strong>Text</strong>"
-//     line = line.replace(/^### (.*)/, '<h3>$1</h3>');
-//     line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-//     return line
-//   }).join('<br>');
-// }
 
 // Fetch bills on initial page load
 fetchBills(page);
