@@ -167,23 +167,22 @@ async function searchBills(){
       },
       body: JSON.stringify({ queryText: query }),
     });
-    
+
     if (!response.ok) {
       console.error("Error: Failed to fetch bills", response.status, response.statusText);
       button.disabled = false;
       return;
     }
 
-    const responseText = await response.json();
-    if (!responseText) {
+    const data = await response.json();
+    if (!data) {
       console.error("Error: Response body is empty");
       button.disabled = false; 
       return;
     } else {
-      console.log(responseText); 
+      console.log(data); 
     }
 
-    const data = await response.json();
     const searchMode = query.trim(); 
 
     if(!cachedBills[searchMode]){
