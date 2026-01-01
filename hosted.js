@@ -141,7 +141,7 @@ app.post('/search-for-bills', async (req, res) => {
         const response = await searchForBills(queryText);
 
         if(response){
-            return res.status(200).json(response.rows)
+            return res.status(200).json(response)
         } else {
             return res.status(404).text()
         }
