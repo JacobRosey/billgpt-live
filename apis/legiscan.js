@@ -16,6 +16,7 @@ const searchForBills = async (text) => {
     return response.data
   } catch (error){
     console.log(error)
+    return { status: 'ERROR', message: 'LegiScan search failed' }
   }
 }
 
