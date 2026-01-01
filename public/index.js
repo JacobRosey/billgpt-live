@@ -174,7 +174,7 @@ async function searchBills(){
       return;
     }
 
-    const responseText = await response.text();
+    const responseText = await response.json();
     if (!responseText) {
       console.error("Error: Response body is empty");
       button.disabled = false; 
