@@ -12,11 +12,10 @@ const searchForBills = async (text) => {
   console.log("searching for bills including text: ", queryText)
   try {
     const response = await axios.get(url)
-    console.log("afjdkl;afjioqeapnjfokipdasnfponapoweifnjkoapdsnjfkpanefkojapsnfkojpanefmoasenjfo")
     console.log(response.data)
     return response.data
   } catch (error){
-    throw new Error(`Error fetching bill data: ${error.message}`);
+    throw new Error(`Error searching for bills: ${error.message}`);
   }
 }
 
