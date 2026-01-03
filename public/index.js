@@ -113,8 +113,12 @@ async function fetchBills(page) {
 
 function renderCachedBills(arg) {
   activeMode = arg ? 'search' : 'sort'
+  if(!arg && cachedBills[sortMode].length == 0){
+    billListElement.innerText = `Sorry, there are no bills for sort mode: ${activeMode}`
+  }
+  
   for (const bill of cachedBills[arg ? arg : sortMode]) {
-    let id = bill.bill_id;
+    const id = bill.bill_id;
 
     const billItem = document.createElement('div');
     billItem.setAttribute('id', id);
