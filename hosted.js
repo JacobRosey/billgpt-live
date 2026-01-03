@@ -100,7 +100,6 @@ app.post('/summarize-bill', async (req, res) => {
     }
 });
 
-
 //Summarize text needs work next
 app.post('/get-bill-data', async (req, res) => {
     try {
@@ -108,9 +107,9 @@ app.post('/get-bill-data', async (req, res) => {
         
         const baseQuery = "SELECT * FROM ls_bill WHERE bill_number NOT LIKE 'SR%'";
         const conditions = {
-            'recent': '',
+            'engrossed': ' AND status_id = 2',
             'passed': ' AND status_id = 4',
-            'vetoed': ' AND status_id = 5'
+            'vetoed': ' AND status_id = 5' // incorrect? currently no vetoed bills in 2025, seems wrong
         };
     
         // If the sortMode exists in the conditions, append it to the base query

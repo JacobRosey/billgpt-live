@@ -4,13 +4,13 @@ let page = 0;
 const billsPerPage = 30;
 const billListElement = document.getElementById('billList');
 
-var sortMode = 'recent';
+var sortMode = 'engrossed';
 var activeMode = 'sort';
 
 var cachedBills = {}
 
-document.getElementById('recent').addEventListener('click', function () {
-  sortBills('recent');
+document.getElementById('engrossed').addEventListener('click', function () {
+  sortBills('engrossed');
 });
 
 document.getElementById('passed').addEventListener('click', function () {
