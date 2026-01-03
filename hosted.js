@@ -11,10 +11,8 @@ const { getBillText, searchForBills } = legiscan;
 const app = express();
 const port = process.env.PORT || 3000;
 
-
 app.use(express.json());
 app.use(cors())
-
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -112,8 +110,7 @@ app.post('/get-bill-data', async (req, res) => {
             'vetoed': ' AND status_id = 5' // incorrect? currently no vetoed bills in 2025, seems wrong
         };
     
-        // If the sortMode exists in the conditions, append it to the base query
-        const condition = conditions[sortMode] || ''; // Default to 'recent'
+        const condition = conditions[sortMode] || ''; // Default to 'engrossed'
         
         // Build the final query
         const query = `${baseQuery}${condition} ORDER BY status_date DESC LIMIT $1 OFFSET $2;`;
