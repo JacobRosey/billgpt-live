@@ -81,6 +81,8 @@ async function fetchBills(page) {
       cachedBills[modeAtRequestTime] = []; // Initialize the array for the current sort mode if it doesn't exist
     }
 
+    billListElement.innerHTML = bills.length == 0 ? `<br><br><br><h2>Sorry, we could not find any bills with status: ${sortMode}</h2>` : '';
+
     for (const bill of bills) {
       if (token !== renderToken) return;
       let id = bill.bill_id;
@@ -122,14 +124,7 @@ async function fetchBills(page) {
     cachedBills[modeAtRequestTime] = cachedBills[modeAtRequestTime].concat(bills);
   } catch (error) {
     console.error('Error fetching bills:', error);
-  }
-  if (bills.length == 0){
-      billListElement.innerHTML =
-      `
-      <br><br><br>
-      <h2>Sorry, we could not find any bills with status: ${sortMode}</h2>
-      `
-    }
+  } 
 }
 
 function renderCachedBills(arg) {
