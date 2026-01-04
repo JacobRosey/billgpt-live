@@ -37,6 +37,13 @@ function sortBills(mode) {
   sortMode = mode;
   billListElement.innerHTML = '';
   fetchBills(0, renderToken);
+  if (billListElement.innerHTML == '') {
+      billListElement.innerHTML =
+        `
+      <br><br><br>
+      <h2>Sorry, we could not find any bills with status: ${sortMode}</h2>
+      `
+    }
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -45,7 +52,7 @@ async function fetchBills(page) {
 
   //Avoid cache pollution by not using the mutable sortMode during this function's execution
   const modeAtRequestTime = sortMode;
-   const token = renderToken;
+  const token = renderToken;
 
   // Check if we already have the data cached for the current sort mode
   if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
