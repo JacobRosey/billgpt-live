@@ -265,7 +265,7 @@ billListElement.addEventListener('scroll', () => {
   if (activeMode == 'search') return;
 
   // If we've already determined there are no more bills for current mode do nothing
-  if (noMoreBills[sortMode]) return;
+  //if (noMoreBills[sortMode]) return;
 
   if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 10) {
     // Fetch more bills if scrolled to the bottom (small threshold)
