@@ -42,9 +42,11 @@ function sortBills(mode) {
   activeMode = 'sort'
   sortMode = mode;
   billListElement.innerHTML = '';
-  // Restore last loaded page for this mode, or 0 if not loaded yet
-  const page = currentPage[sortMode] || 0;
-  fetchBills(page);
+  // Always reset currentPage for this mode to 0 when switching
+  currentPage[sortMode] = 0;
+  // Also clear noMoreBills for this mode so it can try to fetch again if needed
+  noMoreBills[sortMode] = false;
+  fetchBills(0);
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -60,7 +62,11 @@ async function fetchBills(page) {
 
   // If we already have enough cached items for this page, render only that page slice
   if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length >= (page + 1) * billsPerPage) {
-    console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
+    // If there are no cached bills at all, show the empty message
+    if (cachedBills[modeAtRequestTime].length === 0 && page === 0) {
+      billListElement.innerHTML = `<br><br><br><h2>Sorry, we could not find any bills with status: ${modeAtRequestTime}</h2>`;
+      return;
+    }
     return renderCachedBills(modeAtRequestTime, page);
   }
 
@@ -101,6 +107,12 @@ async function fetchBills(page) {
     // If fewer bills were returned than requested, mark that there are no more results
     if (!bills || bills.length < billsPerPage) {
       noMoreBills[modeAtRequestTime] = true;
+      // If this is the first page and no bills, show the empty message
+      if ((!bills || bills.length === 0) && page === 0) {
+        billListElement.innerHTML = `<br><br><br><h2>Sorry, we could not find any bills with status: ${modeAtRequestTime}</h2>`;
+        isFetching = false;
+        return;
+      }
     }
 
     // Add the fetched bills to the cachedBills map
