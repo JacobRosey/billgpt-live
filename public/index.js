@@ -40,13 +40,15 @@ function sortBills(mode) {
   const newButton = document.getElementById(mode);
   newButton.classList.add('sort-btn-active');
   activeMode = 'sort'
+  // Only reset currentPage and clear billListElement if switching to a new mode
+  if (sortMode !== mode) {
+    currentPage[mode] = currentPage[mode] || 0;
+    billListElement.innerHTML = '';
+  }
   sortMode = mode;
-  billListElement.innerHTML = '';
-  // Always reset currentPage for this mode to 0 when switching
-  currentPage[sortMode] = 0;
   // Also clear noMoreBills for this mode so it can try to fetch again if needed
   noMoreBills[sortMode] = false;
-  fetchBills(0);
+  fetchBills(currentPage[sortMode] || 0);
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
