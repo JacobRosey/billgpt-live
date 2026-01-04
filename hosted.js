@@ -107,7 +107,7 @@ app.post('/get-bill-data', async (req, res) => {
         const conditions = {
             'engrossed': ' AND status_id = 2',
             'passed': ' AND status_id = 4',
-            'vetoed': ' AND status_id = 5' // incorrect? currently no vetoed bills in 2025, seems wrong
+            'vetoed': ' AND status_id = 5' // Currently no vetoed bills for 2025 
         };
     
         const condition = conditions[sortMode] || ''; // Default to 'engrossed'

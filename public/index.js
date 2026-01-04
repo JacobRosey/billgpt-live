@@ -2,7 +2,7 @@ import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
 
 let renderToken = 0
 let page = 0;
-const billsPerPage = 30;
+const billsPerPage = 10;
 
 const billListElement = document.getElementById('billList');
 
@@ -28,6 +28,7 @@ document.getElementById('search-button').addEventListener('click', searchBills);
 function sortBills(mode) {
 
   if (mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
+  page = 0
   renderToken++
   const button = document.getElementById(sortMode);
   button.classList.remove('sort-btn-active')
@@ -48,7 +49,7 @@ async function fetchBills(page) {
   const token = renderToken;
 
   // Check if we already have the data cached for the current sort mode
-  if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
+  if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length >= (page + 1) * billsPerPage) {
     console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
     return renderCachedBills();
   }
@@ -230,7 +231,7 @@ billListElement.addEventListener('scroll', () => {
   if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight) {
     // Fetch more bills if scrolled to the bottom
     page += 1;
-    fetchBills(page, sortMode);
+    fetchBills(page);
   }
 });
 
