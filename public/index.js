@@ -1,7 +1,9 @@
 import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
 
+let renderToken = 0
 let page = 0;
 const billsPerPage = 30;
+
 const billListElement = document.getElementById('billList');
 
 var sortMode = 'engrossed';
@@ -26,13 +28,15 @@ document.getElementById('search-button').addEventListener('click', searchBills);
 function sortBills(mode) {
 
   if (mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
+  renderToken++
   const button = document.getElementById(sortMode);
   button.classList.remove('sort-btn-active')
   const newButton = document.getElementById(mode);
   newButton.classList.add('sort-btn-active');
+  activeMode = 'sort'
   sortMode = mode;
   billListElement.innerHTML = '';
-  fetchBills(0);
+  fetchBills(0, renderToken);
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -77,6 +81,7 @@ async function fetchBills(page) {
     }
 
     for (const bill of bills) {
+      if (token !== renderToken) return;
       let id = bill.bill_id;
       const summarized = await isSummarized(id);
 
