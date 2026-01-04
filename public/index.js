@@ -11,6 +11,11 @@ var activeMode = 'sort';
 
 var cachedBills = {}
 
+// Track whether a network fetch is in progress to prevent duplicate requests
+let isFetching = false;
+// Track if we've reached the end of results for a given mode/search term
+let noMoreBills = {}
+
 document.getElementById('engrossed').addEventListener('click', function () {
   sortBills('engrossed');
 });
@@ -37,7 +42,8 @@ function sortBills(mode) {
   activeMode = 'sort'
   sortMode = mode;
   billListElement.innerHTML = '';
-  fetchBills(0, renderToken);
+  // call fetchBills with correct signature
+  fetchBills(0);
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -48,11 +54,21 @@ async function fetchBills(page) {
   const modeAtRequestTime = sortMode;
   const token = renderToken;
 
-  // Check if we already have the data cached for the current sort mode
+  // If we already have enough cached items for this page, render only that page slice
   if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length >= (page + 1) * billsPerPage) {
     console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
-    return renderCachedBills();
+    return renderCachedBills(modeAtRequestTime, page);
   }
+
+  // If we've previously detected there are no more bills for this mode, skip fetching
+  if (noMoreBills[modeAtRequestTime]) {
+    console.log(`No more bills to fetch for mode: ${modeAtRequestTime}`);
+    return;
+  }
+
+  // Prevent concurrent fetches
+  if (isFetching) return;
+  isFetching = true;
 
   console.log("fetching new bills in sort mode: ", modeAtRequestTime);
 
@@ -74,7 +90,13 @@ async function fetchBills(page) {
 
     if (sortMode !== modeAtRequestTime) {
       console.log(`User changed sort mode during bill fetching, discarding stale bills for ${modeAtRequestTime}`)
+      isFetching = false;
       return
+    }
+
+    // If fewer bills were returned than requested, mark that there are no more results
+    if (!bills || bills.length < billsPerPage) {
+      noMoreBills[modeAtRequestTime] = true;
     }
 
     // Add the fetched bills to the cachedBills map
@@ -82,10 +104,16 @@ async function fetchBills(page) {
       cachedBills[modeAtRequestTime] = []; // Initialize the array for the current sort mode if it doesn't exist
     }
 
-    billListElement.innerHTML = bills.length == 0 ? `<br><br><br><h2>Sorry, we could not find any bills with status: ${sortMode}</h2>` : '';
+    // Ensure the list for the current page is visible; when fetching for page 0 the container was already cleared
+    if (page === 0) {
+      billListElement.innerHTML = bills.length == 0 ? `<br><br><br><h2>Sorry, we could not find any bills with status: ${sortMode}</h2>` : '';
+    }
 
     for (const bill of bills) {
-      if (token !== renderToken) return;
+      if (token !== renderToken) {
+        isFetching = false;
+        return;
+      }
       let id = bill.bill_id;
       const summarized = await isSummarized(id);
 
@@ -125,13 +153,20 @@ async function fetchBills(page) {
     cachedBills[modeAtRequestTime] = cachedBills[modeAtRequestTime].concat(bills);
   } catch (error) {
     console.error('Error fetching bills:', error);
-  } 
+  } finally {
+    isFetching = false;
+  }
 }
 
-function renderCachedBills(arg) {
+function renderCachedBills(arg, page = 0) {
   activeMode = arg ? 'search' : 'sort'
 
-  for (const bill of cachedBills[arg ? arg : sortMode]) {
+  const list = cachedBills[arg ? arg : sortMode] || [];
+  const start = page * billsPerPage;
+  const end = start + billsPerPage;
+
+  // Append only the slice for the requested page to avoid duplicating previously-rendered items
+  for (const bill of list.slice(start, end)) {
     const id = bill.bill_id;
 
     const billItem = document.createElement('div');
@@ -228,8 +263,12 @@ async function searchBills() {
 // Lazy load more bills when scrolling
 billListElement.addEventListener('scroll', () => {
   if (activeMode == 'search') return;
-  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight) {
-    // Fetch more bills if scrolled to the bottom
+
+  // If we've already determined there are no more bills for current mode do nothing
+  if (noMoreBills[sortMode]) return;
+
+  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 10) {
+    // Fetch more bills if scrolled to the bottom (small threshold)
     page += 1;
     fetchBills(page);
   }
@@ -340,7 +379,7 @@ function renderSummary(id, content) {
   const billPosition = bill.offsetTop;
 
   // Smoothly scroll the container
-  billList.scrollTo({
+  billListElement.scrollTo({
     top: billPosition - 90,
     behavior: 'smooth',
   });
