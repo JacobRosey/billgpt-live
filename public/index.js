@@ -105,8 +105,8 @@ async function fetchBills(page) {
       billItem.appendChild(billContent);
       billItem.appendChild(summaryItem);
       billListElement.appendChild(billItem);
+      cachedBills[modeAtRequestTime].push(bill);
     }
-    cachedBills[modeAtRequestTime] = cachedBills[modeAtRequestTime].concat(bills);
   } catch (error) {
     console.error('Error fetching bills:', error);
   }
