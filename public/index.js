@@ -2,7 +2,7 @@ import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
 
 let renderToken = 0
 let page = 0;
-const billsPerPage = 50;
+const billsPerPage = 15;
 
 const billListElement = document.getElementById('billList');
 
