@@ -1,6 +1,7 @@
 import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
 
-let renderToken = 0;
+let renderToken = 0
+let page = 0;
 const billsPerPage = 15;
 
 const billListElement = document.getElementById('billList');
@@ -14,9 +15,6 @@ var cachedBills = {}
 let isFetching = false;
 // Track if we've reached the end of results for a given mode/search term
 let noMoreBills = {}
-
-// Track current page per sort mode
-let currentPage = {};
 
 document.getElementById('engrossed').addEventListener('click', function () {
   sortBills('engrossed');
@@ -33,7 +31,9 @@ document.getElementById('vetoed').addEventListener('click', function () {
 document.getElementById('search-button').addEventListener('click', searchBills);
 
 function sortBills(mode) {
+
   if (mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
+  page = 0
   renderToken++
   const button = document.getElementById(sortMode);
   button.classList.remove('sort-btn-active')
@@ -58,9 +58,6 @@ async function fetchBills(page) {
   //Avoid cache pollution by not using the mutable sortMode during this function's execution
   const modeAtRequestTime = sortMode;
   const token = renderToken;
-
-  // When fetching, update currentPage for this mode
-  currentPage[sortMode] = page;
 
   // If we already have enough cached items for this page, render only that page slice
   if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length >= (page + 1) * billsPerPage) {
@@ -183,9 +180,6 @@ function renderCachedBills(arg, page = 0) {
   const start = page * billsPerPage;
   const end = start + billsPerPage;
 
-  // When rendering, update currentPage for this mode
-  if (!arg) currentPage[sortMode] = page;
-
   // Append only the slice for the requested page to avoid duplicating previously-rendered items
   for (const bill of list.slice(start, end)) {
     const id = bill.bill_id;
@@ -290,9 +284,8 @@ billListElement.addEventListener('scroll', () => {
 
   if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 10) {
     // Fetch more bills if scrolled to the bottom (small threshold)
-    // Use currentPage for this mode
-    const nextPage = (currentPage[sortMode] || 0) + 1;
-    fetchBills(nextPage);
+    page += 1;
+    fetchBills(page);
   }
 });
 
@@ -415,4 +408,4 @@ function renderSummary(id, content) {
 }
 
 // Fetch bills on initial page load
-fetchBills(currentPage[sortMode] || 0);
+fetchBills(page);
