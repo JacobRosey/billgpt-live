@@ -37,13 +37,6 @@ function sortBills(mode) {
   sortMode = mode;
   billListElement.innerHTML = '';
   fetchBills(0, renderToken);
-  if (billListElement.innerHTML == '') {
-      billListElement.innerHTML =
-        `
-      <br><br><br>
-      <h2>Sorry, we could not find any bills with status: ${sortMode}</h2>
-      `
-    }
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -130,6 +123,13 @@ async function fetchBills(page) {
   } catch (error) {
     console.error('Error fetching bills:', error);
   }
+  if (bills.length == 0){
+      billListElement.innerHTML =
+      `
+      <br><br><br>
+      <h2>Sorry, we could not find any bills with status: ${sortMode}</h2>
+      `
+    }
 }
 
 function renderCachedBills(arg) {
