@@ -45,6 +45,7 @@ async function fetchBills(page) {
 
   //Avoid cache pollution by not using the mutable sortMode during this function's execution
   const modeAtRequestTime = sortMode;
+   const token = renderToken;
 
   // Check if we already have the data cached for the current sort mode
   if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
