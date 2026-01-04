@@ -39,13 +39,16 @@ function sortBills(mode) {
 // and if so change button to 'view summary' and render it
 async function fetchBills(page) {
 
+  //Avoid cache pollution by not using the mutable sortMode during this function's execution
+  const modeAtRequestTime = sortMode;
+
   // Check if we already have the data cached for the current sort mode
-  if (cachedBills[sortMode] && cachedBills[sortMode].length > page * billsPerPage) {
-    console.log("Rendering cached bills in sort mode: ", sortMode)
+  if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
+    console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
     return renderCachedBills();
   }
 
-  console.log("fetching new bills in sort mode: ", sortMode);
+  console.log("fetching new bills in sort mode: ", modeAtRequestTime);
 
   try {
     const recordStart = page * billsPerPage;
@@ -57,15 +60,20 @@ async function fetchBills(page) {
       body: JSON.stringify({
         recordStart: recordStart,
         billsPerPage: billsPerPage,
-        sortMode: sortMode
+        sortMode: modeAtRequestTime
       }),
     });
 
     const bills = await response.json();
 
+    if (sortMode !== modeAtRequestTime) {
+      console.log(`User changed sort mode during bill fetching, discarding stale bills for ${modeAtRequestTime}`)
+      return
+    }
+
     // Add the fetched bills to the cachedBills map
-    if (!cachedBills[sortMode]) {
-      cachedBills[sortMode] = []; // Initialize the array for the current sort mode if it doesn't exist
+    if (!cachedBills[modeAtRequestTime]) {
+      cachedBills[modeAtRequestTime] = []; // Initialize the array for the current sort mode if it doesn't exist
     }
 
     for (const bill of bills) {
@@ -105,7 +113,7 @@ async function fetchBills(page) {
 
       billListElement.appendChild(billItem);
     }
-    cachedBills[sortMode] = cachedBills[sortMode].concat(bills);
+    cachedBills[modeAtRequestTime] = cachedBills[modeAtRequestTime].concat(bills);
   } catch (error) {
     console.error('Error fetching bills:', error);
   }
