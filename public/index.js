@@ -31,7 +31,7 @@ function sortBills(mode) {
   activeMode = 'sort'
   sortMode = mode;
   billListElement.innerHTML = '';
-  fetchBills(0, renderToken);
+  fetchBills(0);
 }
 
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
@@ -209,10 +209,10 @@ async function searchBills() {
 // Lazy load more bills when scrolling
 billListElement.addEventListener('scroll', () => {
   if (activeMode == 'search') return;
-  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight) {
+  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 15) {
     // Fetch more bills if scrolled to the bottom
     page += 1;
-    fetchBills(page, sortMode);
+    fetchBills(page);
   }
 });
 
