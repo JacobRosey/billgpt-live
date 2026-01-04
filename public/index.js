@@ -209,7 +209,7 @@ async function searchBills() {
 // Lazy load more bills when scrolling
 billListElement.addEventListener('scroll', () => {
   if (activeMode == 'search') return;
-  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 15) {
+  if (billListElement.scrollTop + billListElement.clientHeight >= billListElement.scrollHeight - 5) {
     // Fetch more bills if scrolled to the bottom
     page += 1;
     fetchBills(page);
