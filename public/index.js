@@ -37,7 +37,7 @@ function sortBills(mode) {
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
 // and if so change button to 'view summary' and render it
 async function fetchBills(page) {
-  
+
   const engrossed_btn = document.getElementById('engrossed');
   const passed_btn = document.getElementById('passed');
   const vetoed_btn = document.getElementById('vetoed');
@@ -52,15 +52,12 @@ async function fetchBills(page) {
 
   const token = renderToken;
 
-  // Check if we already have the data cached for the current sort mode
-  if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
-    console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
-    return renderCachedBills();
-  }
-
-  console.log("fetching new bills in sort mode: ", modeAtRequestTime);
-
   try {
+    // Check if we already have the data cached for the current sort mode
+    if (cachedBills[modeAtRequestTime] && cachedBills[modeAtRequestTime].length > page * billsPerPage) {
+      console.log("Rendering cached bills in sort mode: ", modeAtRequestTime)
+      return renderCachedBills();
+    }
     const recordStart = page * billsPerPage;
     const response = await fetch('https://billgpt.onrender.com/get-bill-data', {
       method: 'POST',
@@ -118,11 +115,11 @@ async function fetchBills(page) {
     }
   } catch (error) {
     console.error('Error fetching bills:', error);
+  } finally {
+    sort_btns.forEach((btn) => {
+      btn.disabled = false;
+    });
   }
-  sort_btns.forEach((btn) => {
-    btn.disabled = false;
-  });
-
 }
 
 function renderCachedBills(arg) {
@@ -149,12 +146,12 @@ function renderCachedBills(arg) {
       button.classList.add('summarized-btn');
       button.onclick = () => renderSummary(id, bill.summary);
     }
-    
+
     billContent.appendChild(titleSpan);
     billContent.appendChild(button);
-    
+
     const summaryItem = document.createElement('div');
-    
+
     summaryItem.classList.add('summary-item');
     billItem.appendChild(billContent);
     billItem.appendChild(summaryItem);
@@ -191,7 +188,7 @@ async function searchBills() {
     } else {
       console.log(data);
     }
-  
+
     const searchMode = query.trim();
 
     if (!cachedBills[searchMode]) {
