@@ -37,6 +37,15 @@ function sortBills(mode) {
 // Check if bill has already been summarized (should know if summary exists when receiving from backend)
 // and if so change button to 'view summary' and render it
 async function fetchBills(page) {
+  
+  const engrossed_btn = document.getElementById('engrossed');
+  const passed_btn = document.getElementById('passed');
+  const vetoed_btn = document.getElementById('vetoed');
+
+  sort_btns = [engrossed_btn, passed_btn, vetoed_btn];
+  sort_btns.forEach((btn) => {
+    btn.disabled = true;
+  });
 
   //Avoid cache pollution by not using the mutable sortMode during this function's execution
   const modeAtRequestTime = sortMode;
@@ -110,6 +119,9 @@ async function fetchBills(page) {
   } catch (error) {
     console.error('Error fetching bills:', error);
   }
+  sort_btns.forEach((btn) => {
+    btn.disabled = false;
+  });
 
 }
 
