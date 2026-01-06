@@ -42,7 +42,7 @@ async function fetchBills(page) {
   const passed_btn = document.getElementById('passed');
   const vetoed_btn = document.getElementById('vetoed');
 
-  sort_btns = [engrossed_btn, passed_btn, vetoed_btn];
+  const sort_btns = [engrossed_btn, passed_btn, vetoed_btn];
   sort_btns.forEach((btn) => {
     btn.disabled = true;
   });
