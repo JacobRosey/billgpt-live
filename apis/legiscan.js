@@ -1,6 +1,7 @@
 import axios from 'axios';
-import PDFParser from 'pdf2json';
 import dotenv from 'dotenv';
+import { parsePdfUsingWorker } from '../workers/pdfWorkerClient.js';
+
 dotenv.config();
 
 const legiscan_key = process.env.LEGI_API_KEY;
@@ -34,41 +35,6 @@ async function getBillData(docId) {
   }
 }
 
-function parsePdf(b64) {
-  return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser(null, 1);
-
-    pdfParser.on("pdfParser_dataReady", function (pdfData) {
-      try {
-        let extractedText = '';
-
-        pdfData.Pages.forEach(page => {
-          page.Texts.forEach(textItem => {
-            const decodedText = decodeURIComponent(textItem.R[0].T);
-            extractedText += decodedText + ' ';
-          });
-          extractedText += '\n\n';
-        });
-
-        resolve(extractedText.trim());
-      } catch (err) {
-        reject(new Error(`Error processing PDF data: ${err.message}`));
-      }
-    });
-
-    pdfParser.on("pdfParser_dataError", function (error) {
-      reject(new Error(`PDF parsing error: ${error}`));
-    });
-
-    try {
-      const data = Buffer.from(b64, 'base64');
-      pdfParser.parseBuffer(data);
-    } catch (err) {
-      reject(new Error(`Error preparing PDF data: ${err.message}`));
-    }
-  });
-}
-
 const getBillText = async (billId) => {
   if (!billId) {
     throw new Error('Invalid bill ID provided');
@@ -100,7 +66,7 @@ const getBillText = async (billId) => {
     let billText;
     try {
       console.log("Parsing pdf...")
-      billText = await parsePdf(billData.text.doc);
+      billText = await parsePdfUsingWorker(billData.text.doc);
     } catch (parseError) {
       console.error('Document parsing error details:', parseError);
       throw new Error(`Document parsing error: ${parseError.message}`);
