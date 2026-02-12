@@ -21,6 +21,17 @@ document.getElementById('vetoed').addEventListener('click', function () {
 });
 document.getElementById('search-button').addEventListener('click', searchBills);
 
+// Allow pressing Enter in the search input to trigger the search button
+const searchInput = document.getElementById('search');
+if (searchInput) {
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('search-button').click();
+    }
+  });
+}
+
 function sortBills(mode) {
   if (mode == sortMode && activeMode == 'sort') return; //Clicked the already active button
   renderToken++
