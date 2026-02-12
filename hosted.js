@@ -35,20 +35,25 @@ db.query('SELECT NOW()', (err, res) => {
 // Get existing bill summaries from the database
 app.post('/get-existing-summaries', async (req, res) => {
     try {
-        const { billId } = req.body;
+        const { billIds } = req.body;
 
-        const query = 'SELECT summary FROM ls_summaries WHERE bill_id = $1';
-        db.query(query, [billId], (err, results) => {
+        // Handle both single ID (legacy) and array of IDs
+        const ids = Array.isArray(billIds) ? billIds : [billIds];
+
+        const query = 'SELECT bill_id, summary FROM ls_summaries WHERE bill_id = ANY($1)';
+        db.query(query, [ids], (err, results) => {
             if (err) {
                 console.error('Database query error: ', err);
                 return res.status(500).json({ message: 'Error fetching data from the database' });
             }
 
-            if (results.rows.length > 0) {
-                return res.status(200).json({ summary: results.rows[0].summary });
-            } else {
-                return res.status(200).json({ message: 'Bill summary not found' });
-            }
+            // Return as object keyed by bill_id for easy lookup
+            const summaries = {};
+            results.rows.forEach(row => {
+                summaries[row.bill_id] = row.summary;
+            });
+
+            return res.status(200).json(summaries);
         });
     } catch (err) {
         console.error('Error processing request: ', err);

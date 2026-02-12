@@ -80,11 +80,14 @@ async function fetchBills(page) {
       cachedBills[modeAtRequestTime] = []; // Initialize the array for the current sort mode if it doesn't exist
     }
 
+    // Batch check for summaries
+    const billIds = bills.map(b => b.bill_id);
+    const summariesMap = await getExistingSummariesBatch(billIds);
 
     for (const bill of bills) {
       if (token !== renderToken) return
       let id = bill.bill_id;
-      const summarized = await isSummarized(id);
+      const summarized = summariesMap[id] || null;
       const billItem = document.createElement('div');
       billItem.setAttribute('id', id);
       billItem.classList.add('bill-item');
@@ -223,6 +226,29 @@ billListElement.addEventListener('scroll', () => {
     fetchBills(page);
   }
 });
+
+async function getExistingSummariesBatch(billIds) {
+  try {
+    const response = await fetch('https://billgpt.onrender.com/get-existing-summaries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ billIds: billIds }),
+    });
+
+    if (!response.ok) {
+      console.error(response);
+      return {};
+    }
+
+    const summaries = await response.json();
+    return summaries;
+  } catch (err) {
+    console.error(err);
+    return {};
+  }
+}
 
 async function isSummarized(billId) {
   try {
