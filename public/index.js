@@ -312,15 +312,29 @@ async function handleGetSummary(billId) {
     renderSummary(billId, result);
   } catch (error) {
     console.error('Error occurred in handleGetSummary:', error);
-    // Only reset button if queue is full (temporary error)
-    if (error.errorType === 'QUEUE_FULL') {
-      button.disabled = false;
-      button.classList.remove('summarizing-btn');
-      button.classList.add('summarizable-btn');
-      button.innerHTML = 'Get Summary';
-    }
-    // For NO_TEXT_AVAILABLE and other errors, show the message but don't reset button
-    renderSummary(billId, error.displayMessage);
+    // Reset button to "Get Summary" for any error
+    button.disabled = false;
+    button.classList.remove('summarizing-btn');
+    button.classList.add('summarizable-btn');
+    button.innerHTML = 'Get Summary';
+    renderErrorMessage(billId, error.displayMessage);
+  }
+}
+
+function renderErrorMessage(id, content) {
+  const bill = document.getElementById(id);
+  const summaryItem = bill.querySelector('.summary-item');
+
+  // Scroll the .bill-list container to bring the error into view
+  const billPosition = bill.offsetTop;
+  billList.scrollTo({
+    top: billPosition - 90,
+    behavior: 'smooth',
+  });
+
+  if (bill) {
+    summaryItem.classList.add('show');
+    summaryItem.innerHTML = marked.parse(content);
   }
 }
 
