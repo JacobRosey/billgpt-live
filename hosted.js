@@ -67,7 +67,7 @@ app.post('/summarize-bill', async (req, res) => {
         const billText = await getBillText(billId);
         if (!billText) {
             console.log("Bill text not found, returning early...");
-            return res.status(404).send('Bill text not available at this time');
+            return res.status(404).json({ error: 'NO_TEXT_AVAILABLE', message: 'Bill text not available at this time' });
         }
         console.log("Got bill text in ", Date.now() - start, " milliseconds")
         console.log("Summarizing bill text...");
@@ -93,7 +93,11 @@ app.post('/summarize-bill', async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).send('Internal server error');
+        // Check if error is due to queue being full
+        if (error.message && error.message.includes('Server is currently busy')) {
+            return res.status(503).json({ error: 'QUEUE_FULL', message: 'Server is currently busy, please try again later' });
+        }
+        return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Internal server error' });
     }
 });
 

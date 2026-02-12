@@ -42,7 +42,7 @@ class PdfWorkerPool {
             console.log(`[Queue] Busy: ${this.busyWorkers.size}, Queued: ${this.queue.length}`);
             if (this.queue.length >= MAX_QUEUE_LENGTH) {
                 console.log(`[Queue] REJECTED - Queue full (${this.queue.length} >= ${MAX_QUEUE_LENGTH})`);
-                reject(new Error("Too many jobs in queue"));
+                reject(new Error("Server is currently busy, please try again later"));
                 return;
             }
             if (this.idleWorkers.length > 0) {

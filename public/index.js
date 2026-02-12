@@ -256,16 +256,35 @@ async function summarizeBillText(billId) {
     });
 
     if (!response.ok) {
-      return "\n\n\n**Sorry, no text is currently available for this bill. Please try again later! **\n\n\n\n"
+      const errorData = await response.json();
+      // Queue full error - throw with error type
+      if (errorData.error === 'QUEUE_FULL') {
+        const err = new Error("Server is currently busy, please try again later.");
+        err.errorType = 'QUEUE_FULL';
+        err.displayMessage = "\n\n\n**Server is currently busy, please try again later.**\n\n\n\n";
+        throw err;
+      }
+      // No text available - throw with error type
+      if (errorData.error === 'NO_TEXT_AVAILABLE') {
+        const err = new Error("No text available for this bill");
+        err.errorType = 'NO_TEXT_AVAILABLE';
+        err.displayMessage = "\n\n\n**Sorry, no text is currently available for this bill.**\n\n\n\n";
+        throw err;
+      }
+      // Other errors
+      const err = new Error("An error occurred while retrieving the bill text");
+      err.errorType = 'INTERNAL_ERROR';
+      err.displayMessage = "\n\n\n**An error occurred while retrieving the bill text. Please try again later.**\n\n\n\n";
+      throw err;
     }
 
     const textResponse = await response.text();
     try {
       if (activeMode === 'search') {
-        const searchMode = document.getElementById('search').value.trim(); // Adjusted to get the correct search term
+        const searchMode = document.getElementById('search').value.trim();
         const bill = cachedBills[searchMode]?.find(b => b.bill_id === billId);
         if (bill) {
-          bill.summary = textResponse; // Update the summary in the cache
+          bill.summary = textResponse;
         }
       }
       return textResponse;
@@ -293,6 +312,15 @@ async function handleGetSummary(billId) {
     renderSummary(billId, result);
   } catch (error) {
     console.error('Error occurred in handleGetSummary:', error);
+    // Only reset button if queue is full (temporary error)
+    if (error.errorType === 'QUEUE_FULL') {
+      button.disabled = false;
+      button.classList.remove('summarizing-btn');
+      button.classList.add('summarizable-btn');
+      button.innerHTML = 'Get Summary';
+    }
+    // For NO_TEXT_AVAILABLE and other errors, show the message but don't reset button
+    renderSummary(billId, error.displayMessage);
   }
 }
 
