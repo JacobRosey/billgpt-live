@@ -5,10 +5,6 @@ parentPort.on('message', (b64) => {
   try {
     const pdfParser = new PDFParser(null, 1);
 
-    setTimeout(() => {
-      console.log('sleeping for 5 seconds to test job queue');
-    }, 5000);
-
     pdfParser.on('pdfParser_dataReady', (pdfData) => {
       try {
         let extractedText = '';
