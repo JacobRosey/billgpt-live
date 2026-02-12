@@ -34,8 +34,7 @@ function sortBills(mode) {
   fetchBills(0);
 }
 
-// Check if bill has already been summarized (should know if summary exists when receiving from backend)
-// and if so change button to 'view summary' and render it
+// Check if bill has already been summarized, if so change button to 'view summary' and render it
 async function fetchBills(page) {
 
   const engrossed_btn = document.getElementById('engrossed');
