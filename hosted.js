@@ -2,11 +2,10 @@ import express from 'express';
 import path from 'path';
 import legiscan from './apis/legiscan.js';  
 import getBillSummary from './apis/openai.js'
-import pg from 'pg'
 import cors from 'cors'
 import { fileURLToPath } from 'url';
+import { pdfWorkerPool } from './workers/pdfWorkerPool.js';
 
-const { Pool } = pg
 const { getBillText, searchForBills } = legiscan;
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,13 +16,8 @@ app.use(cors())
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-const db = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-})
+// Instantiate the worker pool
+const workerPool = pdfWorkerPool;
 
 db.query('SELECT NOW()', (err, res) => {
     if(err){
