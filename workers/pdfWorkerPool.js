@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const WORKER_PATH = path.join(__dirname, 'pdfWorker.js');
-const MAX_WORKERS = 2;
-const MAX_QUEUE_LENGTH = 3; // change to 10 after testing
+const MAX_WORKERS = 1;
+const MAX_QUEUE_LENGTH = 2; // change to 10 after testing
 
 class PdfWorkerPool {
     constructor() {
@@ -39,7 +39,7 @@ class PdfWorkerPool {
     runJob(data) {
         return new Promise((resolve, reject) => {
             const job = { data, resolve, reject };
-            if (this.queue.length >= MAX_QUEUE_LENGTH) {
+            if (this.queue.length > MAX_QUEUE_LENGTH) {
                 reject(new Error("Too many jobs in queue"));
                 return;
             }
