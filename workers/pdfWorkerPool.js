@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const WORKER_PATH = path.join(__dirname, 'pdfWorker.js');
-const MAX_WORKERS = 1; // change to 2-3
-const MAX_QUEUE_LENGTH = 2; // change to 10 after testing
+const MAX_WORKERS = 3;
+const MAX_QUEUE_LENGTH = 15; 
 
 class PdfWorkerPool {
     constructor() {
