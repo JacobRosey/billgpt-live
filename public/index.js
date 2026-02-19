@@ -294,25 +294,7 @@ async function summarizeBillText(billId) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      // Queue full error - throw with error type
-      if (errorData.error === 'QUEUE_FULL') {
-        const err = new Error("Server is currently busy, please try again later.");
-        err.errorType = 'QUEUE_FULL';
-        err.displayMessage = "\n\n\n**Server is currently busy, please try again later.**\n\n\n\n";
-        throw err;
-      }
-      // No text available - throw with error type
-      if (errorData.error === 'NO_TEXT_AVAILABLE') {
-        const err = new Error("No text available for this bill");
-        err.errorType = 'NO_TEXT_AVAILABLE';
-        err.displayMessage = "\n\n\n**Sorry, no text is currently available for this bill.**\n\n\n\n";
-        throw err;
-      }
-      // Other errors
-      const err = new Error("An error occurred while retrieving the bill text");
-      err.errorType = 'INTERNAL_ERROR';
-      err.displayMessage = "\n\n\n**An error occurred while retrieving the bill text. Please try again later.**\n\n\n\n";
-      throw err;
+      return renderErrorMessage(billId, errorData.message);
     }
 
     const textResponse = await response.text();
@@ -362,7 +344,6 @@ function renderErrorMessage(id, content) {
   const bill = document.getElementById(id);
   const summaryItem = bill.querySelector('.summary-item');
 
-  // Scroll the .bill-list container to bring the error into view
   const billPosition = bill.offsetTop;
   billList.scrollTo({
     top: billPosition - 90,

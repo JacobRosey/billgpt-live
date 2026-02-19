@@ -4,14 +4,15 @@ const openai = new OpenAI({
   apiKey: process.env.VM_AI_KEY
 });
 
-async function getBillSummary(billText) {
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    store: true,
-    messages: [
-      {
-        role: "system",
-        content: `
+async function getBillSummary(billText, retries = 3, delay = 1000) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      store: true,
+      messages: [
+        {
+          role: "system",
+          content: `
           You are a helpful assistant that reads US congress bills and returns a brief, thorough summary in clear, simple language.
           Your users want to understand the bill quickly without having to read the entire bill.
           Remain bipartisan and neutral.
@@ -19,18 +20,38 @@ async function getBillSummary(billText) {
           If the bill includes the allocation of funds to any organizations, make sure to include the specific dollar amounts.
           Mention important people and organizations, with party and state affiliations appended in parentheses, e.g. (D-TX) or (R-NY).
           Use full names like "FirstName LastName" rather than using prefixes like "Mr. LastName".
-          Give the response in markdown format. and include linebreaks between sections.
+          Give the response in markdown format and include linebreaks between sections.
           Do not include greetings or preambles.
         `
-      },
-      {
-        role: "user",
-        content: `Please summarize this US congress bill. Here is the text:\n\n${billText}`
-      }
-    ],
-  });
+        },
+        {
+          role: "user",
+          content: `Please summarize this US congress bill. Here is the text:\n\n${billText}`
+        }
+      ],
+    });
 
-  return completion.choices[0].message;
+    return completion.choices[0].message;
+  }
+
+  catch (err) {
+    if (err.status === 429 && retries > 0) {
+      console.warn(`Rate limited. Retrying in ${delay}ms... (${retries} retries left)`);
+      await new Promise(res => setTimeout(res, delay));
+      return getBillSummary(billText, retries - 1, delay * 2);
+    }
+
+    // After retries exhausted, normalize error
+    if (err.status === 429) {
+      const error = new Error("OpenAI rate limit reached");
+      error.code = "RATE_LIMIT";
+      error.status = 503;
+      throw error;
+    }
+
+    // Re-throw unknown errors
+    throw err;
+  }
 }
 
 export default getBillSummary;

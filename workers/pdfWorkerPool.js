@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const WORKER_PATH = path.join(__dirname, 'pdfWorker.js');
 const MAX_WORKERS = 3;
-const MAX_QUEUE_LENGTH = 15; 
+const MAX_QUEUE_LENGTH = 15;
 
 class PdfWorkerPool {
     constructor() {
@@ -39,18 +39,17 @@ class PdfWorkerPool {
     runJob(data) {
         return new Promise((resolve, reject) => {
             const job = { data, resolve, reject };
-            console.log(`[Queue] Busy: ${this.busyWorkers.size}, Queued: ${this.queue.length}`);
+            console.log(`Queue Busy: ${this.busyWorkers.size}, Queued: ${this.queue.length}`);
             if (this.queue.length >= MAX_QUEUE_LENGTH) {
-                console.log(`[Queue] REJECTED - Queue full (${this.queue.length} >= ${MAX_QUEUE_LENGTH})`);
-                reject(new Error("Server is currently busy, please try again later"));
-                return;
+                const err = new Error("Too many jobs in queue");
+                err.code = "QUEUE_FULL";
+                err.status = 503;
+                return reject(err);
             }
             if (this.idleWorkers.length > 0) {
-                console.log(`[Queue] Assigning to idle worker`);
                 const worker = this.idleWorkers.pop();
                 this.execute(worker, job);
             } else {
-                console.log(`[Queue] Adding job to queue`);
                 this.queue.push(job);
             }
         });

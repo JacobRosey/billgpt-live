@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import legiscan from './apis/legiscan.js';  
+import legiscan from './apis/legiscan.js';
 import getBillSummary from './apis/openai.js'
 import pg from 'pg'
 import cors from 'cors'
@@ -25,7 +25,7 @@ const db = new Pool({
 })
 
 db.query('SELECT NOW()', (err, res) => {
-    if(err){
+    if (err) {
         console.err('Error connecting to database: ', err)
     } else {
         console.log('Connected to PostgreSQL database')
@@ -67,21 +67,14 @@ app.post('/summarize-bill', async (req, res) => {
     try {
         const { billId } = req.body;
 
-        console.log("Getting bill text...")
-        const start = Date.now();
         const billText = await getBillText(billId);
         if (!billText) {
-            console.log("Bill text not found, returning early...");
             return res.status(404).json({ error: 'NO_TEXT_AVAILABLE', message: 'Bill text not available at this time' });
         }
-        console.log("Got bill text in ", Date.now() - start, " milliseconds")
-        console.log("Summarizing bill text...");
-        const summary = await getBillSummary(billText);
-        console.log("Got bill summary in ", Date.now() - start, " milliseconds")
 
+        const summary = await getBillSummary(billText);
         res.status(200).send(summary.content);
 
-        console.log("Saving summary to db...")
         const tob64 = summary.content;
 
         db.query(
@@ -92,34 +85,48 @@ app.post('/summarize-bill', async (req, res) => {
                     console.error("Error adding summary to database: ", err);
                     return;
                 }
-                console.log('Summary inserted into database successfully. Finished in ', Date.now() - start, ' milliseconds');
             }
         );
 
     } catch (error) {
         console.error(error);
-        // Check if error is due to queue being full
-        if (error.message && error.message.includes('Server is currently busy')) {
-            return res.status(503).json({ error: 'QUEUE_FULL', message: 'Server is currently busy, please try again later' });
+
+        if (error.code === 'RATE_LIMIT') {
+            return res.status(503).json({
+                error: 'RATE_LIMIT',
+                message: 'The summarization service is temporarily busy. Please try again shortly.'
+            });
         }
-        return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Internal server error' });
+
+        if (error.code === 'QUEUE_FULL') {
+            return res.status(503).json({
+                error: 'QUEUE_FULL',
+                message: 'Server is currently busy, please try again later'
+            });
+        }
+
+        return res.status(500).json({
+            error: 'INTERNAL_ERROR',
+            message: 'Internal server error'
+        });
     }
+
 });
 
 //Summarize text needs work next
 app.post('/get-bill-data', async (req, res) => {
     try {
         const { recordStart, billsPerPage, sortMode } = req.body;
-        
+
         const baseQuery = "SELECT * FROM ls_bill WHERE bill_number NOT LIKE 'SR%'";
         const conditions = {
             'engrossed': ' AND status_id = 2',
             'passed': ' AND status_id = 4',
             'vetoed': ' AND status_id = 5' // Currently no vetoed bills for 2025 
         };
-    
+
         const condition = conditions[sortMode] || ''; // Default to 'engrossed'
-        
+
         // Build the final query
         const query = `${baseQuery}${condition} ORDER BY status_date DESC LIMIT $1 OFFSET $2;`;
 
@@ -144,7 +151,7 @@ app.post('/search-for-bills', async (req, res) => {
 
         const response = await searchForBills(queryText);
 
-        if(response){
+        if (response) {
             return res.status(200).json(response)
         } else {
             return res.status(404).text()
